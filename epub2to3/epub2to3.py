@@ -21,6 +21,7 @@ import sys
 import os
 import argparse
 import subprocess as sub
+from epubcheck import EpubCheck
 from . import config as config
 
 scriptPath, scriptName = os.path.split(sys.argv[0])
@@ -136,14 +137,24 @@ def main():
 
     for epub in epubs:
         epubIn = os.path.join(dirIn, epub)
-        epubOut = os.path.join(dirOut, epub)
+        epubOut = os.path.join(dirOut, 'output-dir', epub)
         convP, convStatus, convOut, convErr = convertEpub(epubIn, dirOut)
         if convP.returncode != 0:
             success = False
         else:
             success = True
-        
+
         print(epubIn, str(success))
+
+        # Analyse output file with Epubcheck
+        if success:
+            ecOut = EpubCheck(epubOut)
+            ecOutValid = ecOut.valid
+            ecOutMessages = ecOut.messages
+
+            print(ecOutValid)
+            print(ecOutMessages)
+        
 
 if __name__ == "__main__":
     main()

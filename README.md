@@ -2,20 +2,13 @@
 
 ## About
 
-Experimental EPUB 2 to EPUB 3 conversion workflow.
+Experimental EPUB 2 to EPUB 3 conversion workflow. Workflow raps around [DAISY pipeline](https://github.com/daisy/pipeline). 
 
-## DAISY pipeline setup (Linux)
+## Dependencies
 
-Workflow raps around [DAISY pipeline](https://github.com/daisy/pipeline). To make it work, first:
-
-1. Install DAISY pipeline from <https://daisy.github.io/pipeline/Download.html>.
-2. Install CLI tool from <https://github.com/daisy/pipeline-cli-go/releases>
-
-Then check the status of the DAISY pipeline server (should start up automatically):
-
-```
-service daisy-pipeline2 status
-```
+1. Epubcheck Python wrapper: <https://github.com/titusz/epubcheck>
+2. DAISY pipeline: <https://daisy.github.io/pipeline/Download.html>.
+3. DAISY pipeline CLI tool: <https://github.com/daisy/pipeline-cli-go/releases>
 
 ## License
 
