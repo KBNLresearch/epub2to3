@@ -19,6 +19,8 @@
 
 import sys
 import os
+import io
+import json
 import argparse
 import subprocess as sub
 from epubcheck import EpubCheck
@@ -135,26 +137,45 @@ def main():
 
     epubs = os.listdir(dirIn)
 
+    ecList = []
+
     for epub in epubs:
+        success = True
         epubIn = os.path.join(dirIn, epub)
         epubOut = os.path.join(dirOut, 'output-dir', epub)
+
         convP, convStatus, convOut, convErr = convertEpub(epubIn, dirOut)
         if convP.returncode != 0:
             success = False
-        else:
-            success = True
-
-        print(epubIn, str(success))
 
         # Analyse output file with Epubcheck
         if success:
             ecOut = EpubCheck(epubOut)
-            ecOutValid = ecOut.valid
             ecOutMessages = ecOut.messages
 
-            print(ecOutValid)
-            print(ecOutMessages)
-        
+            ecResults = {}
+            ecResults['file'] = epubOut
+            ecResults['valid'] = ecOut.valid
+            messages = []
+            for ecOutMessage in ecOutMessages:
+                message = {}
+                message['id'] = ecOutMessage.id
+                message['level'] = ecOutMessage.level
+                message['location'] = ecOutMessage.location
+                message['message'] = ecOutMessage.message
+                messages.append(message)
+                print(ecOutMessage.message)
+            
+            ecResults['messages'] = messages
+            ecList.append(ecResults)
+
+    # Write EPUBCheck output to JSON file
+    ecOutFile = os.path.join(dirOut, "epubcheck.json")
+    try:
+        with io.open(ecOutFile, 'w', encoding='utf-8') as f:
+            json.dump(ecList, f, indent=4, sort_keys=True)
+    except IOError:
+        errorExit('error while writing epubcheck output file')
 
 if __name__ == "__main__":
     main()
