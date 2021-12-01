@@ -188,6 +188,12 @@ def parseCommandLine():
                         help="don't convert (only validate)",
                         dest='skipConvert',
                         default=False)
+    parser.add_argument('--method', '-m',
+                        action='store',
+                        type=str,
+                        help="conversion method; allowed values: ebooklib, pipeline (default: ebooklib)",
+                        dest='cmethod',
+                        default='ebooklib')
     parser.add_argument('--version', '-v',
                         action='version',
                         version=__version__)
@@ -213,6 +219,11 @@ def main():
     args = parseCommandLine()
     dirIn = os.path.abspath(args.dirIn)
     dirOut = os.path.abspath(args.dirOut)
+    cmethod = args.cmethod
+
+    if cmethod not in ['ebooklib', 'pipeline']:
+        errorExit('conversion method "' + cmethod + '" not supported')
+
     skipConvert = args.skipConvert
 
     # Epubcheck output files for input and output Epubs
@@ -232,13 +243,14 @@ def main():
         epubOut = os.path.join(dirOut, epub)
 
         if not skipConvert:
-            """
-            convP, convStatus, convOut, convErr = convertEpub(epubIn, dirOut)
-            if convP.returncode != 0:
-                success = False
-            """
             # Convert Epub
-            convertEpubEL(epubIn, epubOut)
+            if cmethod == 'pipeline':
+                epubOut = os.path.join(dirOut, 'output-dir', epub)
+                convP, convStatus, convOut, convErr = convertEpub(epubIn, dirOut)
+                if convP.returncode != 0:
+                    success = False
+            else:
+                convertEpubEL(epubIn, epubOut)
 
         # Validate in- and output files with Epubcheck
         ecInResults = validate(epubIn)
