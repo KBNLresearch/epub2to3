@@ -228,7 +228,8 @@ def main():
     for epub in epubs:
         success = True
         epubIn = os.path.join(dirIn, epub)
-        epubOut = os.path.join(dirOut, 'output-dir', epub)
+        #epubOut = os.path.join(dirOut, 'output-dir', epub)
+        epubOut = os.path.join(dirOut, epub)
 
         if not skipConvert:
             """
