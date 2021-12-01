@@ -7,8 +7,9 @@ Experimental EPUB 2 to EPUB 3 conversion workflow. Workflow raps around [DAISY p
 ## Dependencies
 
 1. Epubcheck Python wrapper: <https://github.com/titusz/epubcheck>
-2. DAISY pipeline: <https://daisy.github.io/pipeline/Download.html>.
-3. DAISY pipeline CLI tool: <https://github.com/daisy/pipeline-cli-go/releases>
+2. Ebooklib: <https://github.com/aerkalov/ebooklib>
+3. DAISY pipeline: <https://daisy.github.io/pipeline/Download.html>.
+4. DAISY pipeline CLI tool: <https://github.com/daisy/pipeline-cli-go/releases>
 
 ## License
 
