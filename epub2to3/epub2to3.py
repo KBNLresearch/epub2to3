@@ -147,18 +147,28 @@ def validate(epub):
         meta['hasSignatures'] = ecOutMeta.hasSignatures
         meta['contributors'] = ecOutMeta.contributors
 
-        # Validation messages
-        messages = []
+        # Validation errors and warnings
+        errors = []
+        warnings = []
+        infos = []
         for ecOutMessage in ecOutMessages:
             message = {}
             message['id'] = ecOutMessage.id
             message['level'] = ecOutMessage.level
             message['location'] = ecOutMessage.location
             message['message'] = ecOutMessage.message
-            messages.append(message)
+            if ecOutMessage.level in ['ERROR', 'FATAL']:
+                errors.append(message)
+            elif ecOutMessage.level == 'WARNING':
+                warnings.append(message)
+            else:
+                infos.append(message)
         
         ecResults['meta'] = meta
-        ecResults['messages'] = messages
+        ecResults['errors'] = errors
+        ecResults['warnings'] = warnings
+        ecResults['infos'] = infos
+
         return ecResults
 
 
@@ -173,6 +183,11 @@ def parseCommandLine():
                         action="store",
                         type=str,
                         help="output directory")
+    parser.add_argument('--noconversion', '-n',
+                        action='store_true',
+                        help="don't convert (only validate)",
+                        dest='skipConvert',
+                        default=False)
     parser.add_argument('--version', '-v',
                         action='version',
                         version=__version__)
@@ -198,6 +213,7 @@ def main():
     args = parseCommandLine()
     dirIn = os.path.abspath(args.dirIn)
     dirOut = os.path.abspath(args.dirOut)
+    skipConvert = args.skipConvert
 
     # Epubcheck output files for input and output Epubs
     ecInFile = os.path.join(dirOut, "epubcheckIn.json")
@@ -214,15 +230,16 @@ def main():
         epubIn = os.path.join(dirIn, epub)
         epubOut = os.path.join(dirOut, 'output-dir', epub)
 
-        """
-        convP, convStatus, convOut, convErr = convertEpub(epubIn, dirOut)
-        if convP.returncode != 0:
-            success = False
-        """
-        # Convert Epub
-        convertEpubEL(epubIn, epubOut)
+        if not skipConvert:
+            """
+            convP, convStatus, convOut, convErr = convertEpub(epubIn, dirOut)
+            if convP.returncode != 0:
+                success = False
+            """
+            # Convert Epub
+            convertEpubEL(epubIn, epubOut)
 
-        # Validate in- and outputs files with Epubcheck
+        # Validate in- and output files with Epubcheck
         ecInResults = validate(epubIn)
         ecInList.append(ecInResults)
         ecOutResults = validate(epubOut)
