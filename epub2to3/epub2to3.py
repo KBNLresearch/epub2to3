@@ -199,9 +199,14 @@ def main():
     dirIn = os.path.abspath(args.dirIn)
     dirOut = os.path.abspath(args.dirOut)
 
+    # Epubcheck output files for input and output Epubs
+    ecInFile = os.path.join(dirOut, "epubcheckIn.json")
+    ecOutFile = os.path.join(dirOut, "epubcheckOut.json")
+
     epubs = os.listdir(dirIn)
 
-    # List for storing Epuncheck results
+    # Lists for storing Epuncheck results
+    ecInList = []
     ecOutList = []
 
     for epub in epubs:
@@ -217,17 +222,23 @@ def main():
         # Convert Epub
         convertEpubEL(epubIn, epubOut)
 
-        # Validate output file with Epubcheck
-        ecResults = validate(epubOut)
-        ecOutList.append(ecResults)
+        # Validate in- and outputs files with Epubcheck
+        ecInResults = validate(epubIn)
+        ecInList.append(ecInResults)
+        ecOutResults = validate(epubOut)
+        ecOutList.append(ecOutResults)
 
     # Write EPUBCheck output to JSON file
-    ecOutFile = os.path.join(dirOut, "epubcheck.json")
+    try:
+        with io.open(ecInFile, 'w', encoding='utf-8') as f:
+            json.dump(ecInList, f, indent=4, sort_keys=True)
+    except IOError:
+        errorExit('error while writing ' + ecInFile)
     try:
         with io.open(ecOutFile, 'w', encoding='utf-8') as f:
             json.dump(ecOutList, f, indent=4, sort_keys=True)
     except IOError:
-        errorExit('error while writing epubcheck output file')
+        errorExit('error while writing ' + ecOutFile)
 
 if __name__ == "__main__":
     main()
