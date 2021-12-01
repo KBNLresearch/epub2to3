@@ -23,6 +23,7 @@ import io
 import json
 import argparse
 import subprocess as sub
+from ebooklib import epub
 from epubcheck import EpubCheck
 from . import config as config
 
@@ -98,6 +99,69 @@ def convertEpub(epubIn, dirOut):
     return p, status, out, err
 
 
+def convertEpubEL(epubIn, epubOut):
+    """Convert Epub 2 to epub 3 with Ebooklib"""
+    bookIn = epub.read_epub(epubIn)
+    epub.write_epub(epubOut, bookIn)
+
+
+def validate(epub):
+        """Validate file with Epubcheck"""
+        ecOut = EpubCheck(epub)
+        ecOutMeta = ecOut.meta
+        ecOutMessages = ecOut.messages
+
+        # Dictionary for Epubcheck results 
+        ecResults = {}
+
+        ecResults['file'] = epub
+        ecResults['valid'] = ecOut.valid
+
+        # Metadata
+        meta = {}            
+
+        meta['publisher'] = ecOutMeta.publisher
+        meta['title'] = ecOutMeta.title
+        meta['creator'] = ecOutMeta.creator
+        meta['date'] = ecOutMeta.date
+        meta['subject'] = ecOutMeta.subject
+        meta['description'] = ecOutMeta.description
+        meta['rights'] = ecOutMeta.rights
+        meta['identifier'] = ecOutMeta.identifier
+        meta['language'] = ecOutMeta.language
+        meta['nSpines'] = ecOutMeta.nSpines
+        meta['checkSum'] = ecOutMeta.checkSum
+        meta['renditionLayout'] = ecOutMeta.renditionLayout
+        meta['renditionOrientation'] = ecOutMeta.renditionOrientation
+        meta['renditionSpread'] = ecOutMeta.renditionSpread
+        meta['ePubVersion'] = ecOutMeta.ePubVersion
+        meta['isScripted'] = ecOutMeta.isScripted
+        meta['hasFixedFormat'] = ecOutMeta.hasFixedFormat
+        meta['isBackwardCompatible'] = ecOutMeta.isBackwardCompatible
+        meta['hasAudio'] = ecOutMeta.hasAudio
+        meta['hasVideo'] = ecOutMeta.hasVideo
+        meta['charsCount'] = ecOutMeta.charsCount
+        meta['embeddedFonts'] = ecOutMeta.embeddedFonts
+        meta['refFonts'] = ecOutMeta.refFonts
+        meta['hasEncryption'] = ecOutMeta.hasEncryption
+        meta['hasSignatures'] = ecOutMeta.hasSignatures
+        meta['contributors'] = ecOutMeta.contributors
+
+        # Validation messages
+        messages = []
+        for ecOutMessage in ecOutMessages:
+            message = {}
+            message['id'] = ecOutMessage.id
+            message['level'] = ecOutMessage.level
+            message['location'] = ecOutMessage.location
+            message['message'] = ecOutMessage.message
+            messages.append(message)
+        
+        ecResults['meta'] = meta
+        ecResults['messages'] = messages
+        return ecResults
+
+
 def parseCommandLine():
     """Parse command line"""
     # Add arguments
@@ -137,43 +201,31 @@ def main():
 
     epubs = os.listdir(dirIn)
 
-    ecList = []
+    # List for storing Epuncheck results
+    ecOutList = []
 
     for epub in epubs:
         success = True
         epubIn = os.path.join(dirIn, epub)
         epubOut = os.path.join(dirOut, 'output-dir', epub)
 
+        """
         convP, convStatus, convOut, convErr = convertEpub(epubIn, dirOut)
         if convP.returncode != 0:
             success = False
+        """
+        # Convert Epub
+        convertEpubEL(epubIn, epubOut)
 
-        # Analyse output file with Epubcheck
-        if success:
-            ecOut = EpubCheck(epubOut)
-            ecOutMessages = ecOut.messages
-
-            ecResults = {}
-            ecResults['file'] = epubOut
-            ecResults['valid'] = ecOut.valid
-            messages = []
-            for ecOutMessage in ecOutMessages:
-                message = {}
-                message['id'] = ecOutMessage.id
-                message['level'] = ecOutMessage.level
-                message['location'] = ecOutMessage.location
-                message['message'] = ecOutMessage.message
-                messages.append(message)
-                print(ecOutMessage.message)
-            
-            ecResults['messages'] = messages
-            ecList.append(ecResults)
+        # Validate output file with Epubcheck
+        ecResults = validate(epubOut)
+        ecOutList.append(ecResults)
 
     # Write EPUBCheck output to JSON file
     ecOutFile = os.path.join(dirOut, "epubcheck.json")
     try:
         with io.open(ecOutFile, 'w', encoding='utf-8') as f:
-            json.dump(ecList, f, indent=4, sort_keys=True)
+            json.dump(ecOutList, f, indent=4, sort_keys=True)
     except IOError:
         errorExit('error while writing epubcheck output file')
 
