@@ -102,6 +102,8 @@ def convertEpub(epubIn, dirOut):
 def convertEpubEL(epubIn, epubOut):
     """Convert Epub 2 to epub 3 with Ebooklib"""
     bookIn = epub.read_epub(epubIn)
+    # Add navigation document
+    bookIn.add_item(epub.EpubNav())
     epub.write_epub(epubOut, bookIn)
 
 
